@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bitarena | Web3 Gaming & Football Tournament Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,900;1,700&family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green:    #00c853;
+      --lime:     #b2ff59;
+      --gold:     #ffd600;
+      --orange:   #ff6d00;
+      --dark:     #0a0f0d;
+      --dark2:    #0f1a12;
+      --dark3:    #152018;
+      --card:     rgba(0,200,83,0.06);
+      --border:   rgba(0,200,83,0.18);
+      --text:     #e8f5e9;
+      --dim:      #7a9e82;
+      --white:    #ffffff;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Rajdhani',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;}
+
+    /* ── PITCH BACKGROUND ── */
+    body::before{
+      content:'';
+      position:fixed;top:0;left:0;right:0;bottom:0;
+      background:
+        /* grass stripes */
+        repeating-linear-gradient(
+          180deg,
+          transparent,transparent 60px,
+          rgba(0,120,40,0.07) 60px,rgba(0,120,40,0.07) 120px
+        ),
+        /* dark base */
+        radial-gradient(ellipse at 50% 0%,rgba(0,80,20,0.35) 0%,transparent 70%),
+        radial-gradient(ellipse at 50% 100%,rgba(0,60,15,0.25) 0%,transparent 60%),
+        linear-gradient(180deg,#050d07 0%,#0a1a0e 50%,#060e08 100%);
+      pointer-events:none;z-index:0;
+    }
+
+    /* Pitch centre circle */
+    body::after{
+      content:'';
+      position:fixed;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:500px;height:500px;
+      border-radius:50%;
+      border:1px solid rgba(0,200,83,0.06);
+      box-shadow:0 0 0 80px rgba(0,200,83,0.02),0 0 0 160px rgba(0,200,83,0.015);
+      pointer-events:none;z-index:0;
+    }
+
+    #bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:0.55;}
+
+
+    /* CAT FOOTBALL HERO BG */
+    #hero { position: relative; overflow: hidden; }
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ctext y='60' font-size='40' opacity='0.15'%3E🐱%3C/text%3E%3Ctext x='100' y='140' font-size='35' opacity='0.12'%3E⚽%3C/text%3E%3Ctext x='20' y='180' font-size='30' opacity='0.1'%3E🐱%3C/text%3E%3Ctext x='140' y='50' font-size='28' opacity='0.1'%3E⚽%3C/text%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      background-repeat: repeat;
+      opacity: 1;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #hero > * { position: relative; z-index: 1; }
+
+    /* ── NAV ── */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:1000;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0.85rem 3rem;
+      background:rgba(5,13,7,0.9);
+      backdrop-filter:blur(16px);
+      border-bottom:2px solid var(--green);
+    }
+    .nav-logo{
+      font-family:'Teko',sans-serif;
+      font-size:2rem;font-weight:700;
+      color:var(--white);letter-spacing:3px;
+      display:flex;align-items:center;gap:0.6rem;
+    }
+    .nav-logo .logo-icon{font-size:1.4rem;}
+    .nav-logo span{color:var(--green);}
+    .nav-links{display:flex;gap:1.8rem;list-style:none;align-items:center;}
+    .nav-links a{color:var(--dim);text-decoration:none;font-size:0.85rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s;position:relative;}
+    .nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;background:var(--green);transform:scaleX(0);transition:transform 0.3s;}
+    .nav-links a:hover{color:var(--green);}
+    .nav-links a:hover::after{transform:scaleX(1);}
+    .nav-reg{
+      background:var(--green);color:var(--dark) !important;
+      padding:0.45rem 1.4rem;
+      font-family:'Teko',sans-serif;font-size:1rem !important;
+      font-weight:600;letter-spacing:2px;
+      clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+      transition:all 0.3s;
+    }
+    .nav-reg::after{display:none!important;}
+    .nav-reg:hover{background:var(--lime);box-shadow:0 0 20px rgba(0,200,83,0.5);}
+
+    /* ── SECTIONS ── */
+    section{position:relative;z-index:2;}
+    .section-inner{max-width:1100px;margin:0 auto;padding:5rem 2rem;}
+    .section-eyebrow{font-family:'Teko',sans-serif;font-size:0.85rem;letter-spacing:6px;color:var(--green);text-transform:uppercase;margin-bottom:0.5rem;display:block;}
+    .section-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(2.2rem,5vw,3.8rem);font-weight:900;color:var(--white);line-height:1;margin-bottom:0.8rem;text-transform:uppercase;}
+    .section-title em{color:var(--green);font-style:normal;}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--green),transparent);margin-bottom:3rem;}
+
+    /* BUTTONS */
+    .btn-main{
+      display:inline-block;padding:0.9rem 2.4rem;
+      background:var(--green);color:var(--dark);
+      font-family:'Teko',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:3px;
+      text-decoration:none;cursor:pointer;border:none;
+      clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+      transition:all 0.3s;text-transform:uppercase;
+    }
+    .btn-main:hover{background:var(--lime);box-shadow:0 0 30px rgba(0,200,83,0.5);transform:translateY(-2px);}
+    .btn-outline{
+      display:inline-block;padding:0.9rem 2.4rem;
+      background:transparent;color:var(--text);
+      font-family:'Teko',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:3px;
+      text-decoration:none;cursor:pointer;border:2px solid rgba(255,255,255,0.2);
+      clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+      transition:all 0.3s;text-transform:uppercase;
+    }
+    .btn-outline:hover{border-color:var(--green);color:var(--green);}
+
+    /* ── HERO ── */
+    #hero{
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:7rem 2rem 4rem;
+    }
+    .hero-pre{
+      display:inline-flex;align-items:center;gap:0.6rem;
+      background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.3);
+      color:var(--green);font-size:0.75rem;font-weight:700;letter-spacing:4px;
+      padding:0.35rem 1.2rem;margin-bottom:2rem;
+      clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+      animation:fadeUp 0.8s ease both;
+    }
+    .hero-pre .dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:blink 1.2s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+    .hero-title{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(5rem,15vw,11rem);
+      font-weight:900;
+      line-height:0.85;
+      text-transform:uppercase;
+      letter-spacing:-2px;
+      margin-bottom:1.5rem;
+      animation:fadeUp 0.9s 0.1s ease both;
+    }
+    .hero-title .word1{color:var(--white);display:block;}
+    .hero-title .word2{
+      color:transparent;
+      -webkit-text-stroke:2px var(--green);
+      display:block;
+      text-shadow:0 0 60px rgba(0,200,83,0.3);
+    }
+
+    .hero-tagline{
+      font-family:'Teko',sans-serif;
+      font-size:clamp(1rem,2.5vw,1.4rem);
+      letter-spacing:6px;
+      color:var(--dim);
+      margin-bottom:2.5rem;
+      text-transform:uppercase;
+      animation:fadeUp 1s 0.2s ease both;
+    }
+    .hero-tagline strong{color:var(--gold);}
+
+    .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:fadeUp 1s 0.3s ease both;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+    /* COUNTDOWN */
+    .countdown-box{
+      margin-top:3rem;
+      background:rgba(0,0,0,0.4);
+      border:1px solid var(--border);
+      border-top:3px solid var(--green);
+      padding:1.5rem 2.5rem;
+      max-width:580px;width:100%;
+      animation:fadeUp 1s 0.4s ease both;
+    }
+    .cd-label{
+      font-family:'Teko',sans-serif;font-size:0.9rem;letter-spacing:5px;
+      color:var(--green);text-transform:uppercase;margin-bottom:1rem;
+      display:flex;align-items:center;justify-content:center;gap:0.5rem;
+    }
+    .cd-label .live-dot{width:8px;height:8px;background:var(--orange);border-radius:50%;animation:blink 1s infinite;}
+    .cd-wrap{display:flex;align-items:center;justify-content:center;gap:0.8rem;flex-wrap:wrap;}
+    .cd-item{text-align:center;min-width:72px;}
+    .cd-num{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:3rem;font-weight:900;
+      color:var(--white);line-height:1;display:block;
+    }
+    .cd-sub{font-size:0.6rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-top:2px;}
+    .cd-sep{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;color:var(--green);padding-bottom:16px;font-weight:700;}
+    .cd-event-name{font-family:'Teko',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;}
+
+    /* ── FACEBOOK FEED STRIP ── */
+    .fb-strip{
+      position:relative;z-index:2;
+      background:rgba(0,0,0,0.4);
+      border-top:2px solid var(--green);
+      border-bottom:1px solid var(--border);
+      padding:2.5rem 2rem;
+    }
+    .fb-strip-inner{
+      max-width:900px;margin:0 auto;text-align:center;
+    }
+    .fb-strip-title{
+      font-family:'Teko',sans-serif;
+      font-size:1rem;letter-spacing:5px;
+      color:var(--green);text-transform:uppercase;
+      margin-bottom:1.5rem;
+      display:flex;align-items:center;justify-content:center;gap:0.6rem;
+    }
+    .fb-embed-wrap{
+      display:flex;justify-content:center;
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,0.3);
+    }
+
+    /* ── ABOUT ── */
+    #about{background:linear-gradient(180deg,transparent,rgba(0,60,15,0.2),transparent);}
+    .about-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:4rem;align-items:center;}
+    .about-text p{font-size:1.05rem;color:var(--dim);line-height:1.9;margin-bottom:1.2rem;}
+    .about-text p strong{color:var(--green);}
+
+    .about-visual{
+      background:var(--card);border:1px solid var(--border);
+      padding:2.5rem;position:relative;overflow:hidden;
+    }
+    .about-visual::before{
+      content:'';position:absolute;top:-1px;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--green),var(--lime),transparent);
+    }
+    .visual-stat{margin-bottom:1.8rem;}
+    .visual-stat:last-child{margin-bottom:0;}
+    .vs-label{font-size:0.75rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:0.4rem;}
+    .vs-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-bottom:0.3rem;}
+    .vs-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--lime));border-radius:3px;transition:width 1.5s ease;}
+    .vs-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);}
+
+    /* ── GOALS ── */
+    #goals{background:linear-gradient(180deg,transparent,rgba(0,40,10,0.25),transparent);}
+    .goals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;}
+    .goal-card{
+      background:var(--card);border:1px solid var(--border);
+      padding:2rem 1.5rem;transition:all 0.3s;
+      position:relative;overflow:hidden;
+    }
+    .goal-card::after{
+      content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--green),transparent);
+      transform:scaleX(0);transform-origin:left;transition:transform 0.4s;
+    }
+    .goal-card:hover::after{transform:scaleX(1);}
+    .goal-card:hover{border-color:rgba(0,200,83,0.4);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+    .goal-icon{font-size:2rem;margin-bottom:1rem;display:block;}
+    .goal-title{font-family:'Teko',sans-serif;font-size:1.3rem;color:var(--white);letter-spacing:2px;margin-bottom:0.5rem;text-transform:uppercase;}
+    .goal-desc{font-size:0.9rem;color:var(--dim);line-height:1.7;}
+
+    /* ── SCHEDULE ── */
+    #schedule{background:linear-gradient(180deg,transparent,rgba(0,50,15,0.2),transparent);}
+    .schedule-list{display:flex;flex-direction:column;gap:0.8rem;}
+    .sch-item{
+      display:grid;grid-template-columns:auto 1fr auto;
+      align-items:center;gap:1.5rem;
+      background:var(--card);border:1px solid var(--border);
+      padding:1.2rem 1.8rem;
+      border-left:3px solid transparent;
+      transition:all 0.3s;
+    }
+    .sch-item:hover{border-left-color:var(--green);background:rgba(0,200,83,0.08);}
+    .sch-num{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:2.2rem;font-weight:900;color:rgba(255,255,255,0.08);
+      min-width:50px;text-align:center;line-height:1;
+    }
+    .sch-info .sch-name{font-family:'Teko',sans-serif;font-size:1.3rem;color:var(--white);letter-spacing:1px;text-transform:uppercase;}
+    .sch-meta{font-size:0.8rem;color:var(--dim);margin-top:0.2rem;display:flex;gap:1rem;flex-wrap:wrap;}
+    .sch-meta span{display:flex;align-items:center;gap:0.3rem;}
+    .badge{font-family:'Teko',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:2px;padding:0.25rem 0.9rem;clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);text-transform:uppercase;}
+    .badge-upcoming{background:rgba(0,200,83,0.15);color:var(--green);border:1px solid rgba(0,200,83,0.3);}
+    .badge-live{background:rgba(255,109,0,0.2);color:var(--orange);border:1px solid var(--orange);animation:blink-border 1.2s infinite;}
+    @keyframes blink-border{0%,100%{box-shadow:0 0 5px var(--orange);}50%{box-shadow:0 0 15px var(--orange);}}
+    .badge-ended{background:rgba(122,158,130,0.1);color:var(--dim);border:1px solid rgba(122,158,130,0.2);}
+
+    /* ── WALLET ── */
+    #wallet{background:linear-gradient(180deg,transparent,rgba(0,40,10,0.3),transparent);}
+    .wallet-intro{font-size:1rem;color:var(--dim);max-width:500px;margin-bottom:2.5rem;line-height:1.8;}
+    .wallet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .wallet-btn{
+      display:flex;align-items:center;gap:1.1rem;
+      background:var(--card);border:1px solid var(--border);
+      border-top:2px solid transparent;
+      padding:1.4rem 1.6rem;cursor:pointer;transition:all 0.3s;
+      width:100%;color:var(--text);
+      font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;
+      letter-spacing:1px;text-align:left;
+    }
+    .wallet-btn:hover{border-top-color:var(--green);background:rgba(0,200,83,0.08);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.4);}
+    .wicon{font-size:2rem;}
+    .wlabel{display:flex;flex-direction:column;}
+    .wlabel big{font-family:'Teko',sans-serif;font-size:1.2rem;letter-spacing:2px;text-transform:uppercase;}
+    .wlabel small{font-size:0.72rem;color:var(--dim);font-weight:400;letter-spacing:1px;}
+    .wallet-status{
+      text-align:center;padding:0.9rem 1.2rem;
+      font-family:'Teko',sans-serif;font-size:1rem;letter-spacing:2px;
+      color:var(--dim);border:1px solid transparent;transition:all 0.3s;
+    }
+    .wallet-status.connected{color:var(--green);border-color:var(--border);background:rgba(0,200,83,0.06);}
+    .wallet-status.error{color:var(--orange);border-color:rgba(255,109,0,0.2);background:rgba(255,109,0,0.05);}
+    .wallet-status.pending{color:var(--gold);border-color:rgba(255,214,0,0.2);background:rgba(255,214,0,0.04);animation:blink-border 1s infinite;}
+
+    /* ── LEADERBOARD ── */
+    #leaderboard{background:linear-gradient(180deg,transparent,rgba(0,60,15,0.2),transparent);}
+    .lb-filters{display:flex;gap:0.6rem;margin-bottom:2rem;flex-wrap:wrap;}
+    .lb-fbtn{
+      background:transparent;border:1px solid var(--border);color:var(--dim);
+      padding:0.35rem 1.1rem;
+      font-family:'Teko',sans-serif;font-size:0.95rem;letter-spacing:2px;
+      cursor:pointer;clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);
+      transition:all 0.3s;text-transform:uppercase;
+    }
+    .lb-fbtn.active,.lb-fbtn:hover{border-color:var(--green);color:var(--green);background:rgba(0,200,83,0.08);}
+    .lb-table{width:100%;border-collapse:collapse;}
+    .lb-table thead tr{border-bottom:2px solid var(--green);}
+    .lb-table thead th{
+      font-family:'Teko',sans-serif;font-size:0.85rem;letter-spacing:3px;
+      color:var(--green);padding:0.7rem 1rem;text-align:left;text-transform:uppercase;
+    }
+    .lb-table tbody tr{border-bottom:1px solid var(--border);transition:all 0.2s;}
+    .lb-table tbody tr:hover{background:rgba(0,200,83,0.05);}
+    .lb-table tbody td{padding:0.9rem 1rem;font-size:0.95rem;vertical-align:middle;}
+    .lb-rank{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:900;min-width:48px;}
+    .rg .lb-rank{color:var(--gold);text-shadow:0 0 12px rgba(255,214,0,0.4);}
+    .rs .lb-rank{color:#c0c0c0;}
+    .rb .lb-rank{color:#cd7f32;}
+    .ro .lb-rank{color:var(--dim);}
+    .rg{background:rgba(255,214,0,0.03);}
+    .rs{background:rgba(192,192,192,0.02);}
+    .rb{background:rgba(205,127,50,0.02);}
+    .lb-team{font-family:'Teko',sans-serif;font-size:1.15rem;color:var(--white);letter-spacing:1px;text-transform:uppercase;}
+    .lb-gtag{display:inline-block;font-size:0.65rem;letter-spacing:2px;padding:0.1rem 0.5rem;border:1px solid var(--border);color:var(--dim);margin-top:0.2rem;}
+    .lb-pts{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;color:var(--green);}
+    .lb-matches{color:var(--dim);font-size:0.9rem;}
+    .lb-wl .w{color:var(--green);font-weight:700;}
+    .lb-wl .l{color:#ff5252;font-weight:700;}
+    .lb-more{text-align:center;margin-top:2rem;}
+
+    /* ── SOCIAL ── */
+    #social{border-top:1px solid var(--border);}
+    .social-grid{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+    .soc-link{
+      display:flex;align-items:center;gap:0.7rem;
+      background:var(--card);border:1px solid var(--border);
+      border-bottom:2px solid transparent;
+      padding:0.9rem 1.5rem;text-decoration:none;color:var(--dim);
+      font-family:'Teko',sans-serif;font-size:1rem;letter-spacing:2px;
+      text-transform:uppercase;transition:all 0.3s;
+    }
+    .soc-link:hover{color:var(--green);border-bottom-color:var(--green);background:rgba(0,200,83,0.06);transform:translateY(-3px);}
+    .soc-icon{font-size:1.3rem;}
+
+    /* ── FOOTER ── */
+    footer{
+      position:relative;z-index:2;
+      background:rgba(0,0,0,0.5);
+      border-top:2px solid var(--green);
+      text-align:center;padding:2rem;
+      font-size:0.8rem;color:var(--dim);letter-spacing:2px;
+    }
+    footer span{color:var(--green);}
+    footer a{color:var(--green);text-decoration:none;}
+
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity 0.7s,transform 0.7s;}
+    .reveal.visible{opacity:1;transform:translateY(0);}
+
+    @media(max-width:900px){
+      nav{padding:0.85rem 1.5rem;}
+      .nav-links{display:none;}
+      .about-grid{grid-template-columns:1fr;}
+      .stats-strip-inner{grid-template-columns:repeat(2,1fr);}
+      .sch-item{grid-template-columns:1fr;gap:0.5rem;}
+      .sch-num{display:none;}
+      .lb-table th:nth-child(4),.lb-table td:nth-child(4){display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><span class="logo-icon">⚽</span>BIT<span>ARENA</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#goals">Goals</a></li>
+    <li><a href="#schedule">Schedule</a></li>
+    <li><a href="#wallet">Connect</a></li>
+    <li><a href="#leaderboard">Leaderboard</a></li>
+    <li><a href="#social">Social</a></li>
+    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSdVzdTlwJeXYz8k_x7qEpt7No7lV1BrvBduQVv-O1BsFxj2pg/viewform" target="_blank" class="nav-reg">Register</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-pre"><span class="dot"></span> WEB3 GAMING &amp; FOOTBALL TOURNAMENT HUB</div>
+  <h1 class="hero-title">
+    <span class="word1">BIT</span>
+    <span class="word2">ARENA</span>
+  </h1>
+  <p class="hero-tagline">COMPETE · EARN · <strong>DOMINATE</strong></p>
+  <div class="hero-btns">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdVzdTlwJeXYz8k_x7qEpt7No7lV1BrvBduQVv-O1BsFxj2pg/viewform" class="btn-main" target="_blank">⚡ Register Now</a>
+    <a href="#about" class="btn-outline">Learn More</a>
+  </div>
+
+  <!-- AUTO COUNTDOWN — shows only when upcoming event is within 7 days -->
+  <div class="countdown-box" id="countdownBox" style="display:none;">
+    <div class="cd-label"><span class="live-dot"></span> NEXT MATCH COUNTDOWN</div>
+    <div class="cd-event-name" id="cdEventName"></div>
+    <div class="cd-wrap">
+      <div class="cd-item"><span class="cd-num" id="cd-d">00</span><div class="cd-sub">Days</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-item"><span class="cd-num" id="cd-h">00</span><div class="cd-sub">Hours</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-item"><span class="cd-num" id="cd-m">00</span><div class="cd-sub">Mins</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-item"><span class="cd-num" id="cd-s">00</span><div class="cd-sub">Secs</div></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner reveal">
+    <span class="section-eyebrow">// 001 — Who We Are</span>
+    <h2 class="section-title">About <em>Bitarena</em></h2>
+    <div class="divider"></div>
+    <div class="about-grid">
+      <div class="about-text">
+        <p><strong>Bitarena</strong> is a decentralized Web3 gaming and football tournament platform where players and teams compete, earn, and own their victories on-chain. We're building the future of competitive gaming — transparent, borderless, and rewarding.</p>
+        <p>From mobile gaming tournaments to grassroots football competitions, Bitarena connects communities worldwide through skill-based events powered by blockchain technology. Every match result is verifiable. Every reward is trustless.</p>
+        <p>Whether you're a solo gamer or a football squad — <strong>this is your arena.</strong></p>
+
+      </div>
+      <div class="about-visual">
+        <div class="visual-stat">
+          <div class="vs-label">Community Growth</div>
+          <div class="vs-bar"><div class="vs-fill" style="width:0%" data-width="85%"></div></div>
+          <div class="vs-val">85%</div>
+        </div>
+        <div class="visual-stat">
+          <div class="vs-label">Tournament Completion Rate</div>
+          <div class="vs-bar"><div class="vs-fill" style="width:0%" data-width="97%"></div></div>
+          <div class="vs-val">97%</div>
+        </div>
+        <div class="visual-stat">
+          <div class="vs-label">Prize Distribution Speed</div>
+          <div class="vs-bar"><div class="vs-fill" style="width:0%" data-width="100%"></div></div>
+          <div class="vs-val">Instant</div>
+        </div>
+        <div class="visual-stat">
+          <div class="vs-label">Player Satisfaction</div>
+          <div class="vs-bar"><div class="vs-fill" style="width:0%" data-width="92%"></div></div>
+          <div class="vs-val">92%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section id="goals">
+  <div class="section-inner reveal">
+    <span class="section-eyebrow">// 002 — Mission</span>
+    <h2 class="section-title">Project <em>Goals</em></h2>
+    <div class="divider"></div>
+    <div class="goals-grid">
+      <div class="goal-card"><span class="goal-icon">🏆</span><div class="goal-title">Fair Competition</div><div class="goal-desc">On-chain match results ensure 100% transparent and tamper-proof tournament outcomes for all players and teams.</div></div>
+      <div class="goal-card"><span class="goal-icon">💰</span><div class="goal-title">Play & Earn</div><div class="goal-desc">Real rewards for real skill. Winners receive crypto prizes directly to their wallets — no middlemen, no delays.</div></div>
+      <div class="goal-card"><span class="goal-icon">🌍</span><div class="goal-title">Global Access</div><div class="goal-desc">Anyone, anywhere can compete. No geographic restrictions — just pure skill-based gaming and football.</div></div>
+      <div class="goal-card"><span class="goal-icon">🔗</span><div class="goal-title">Web3 Native</div><div class="goal-desc">Built on blockchain infrastructure — wallet-based identity, token rewards, and DAO governance coming soon.</div></div>
+      <div class="goal-card"><span class="goal-icon">⚽</span><div class="goal-title">Football Hub</div><div class="goal-desc">A dedicated space for football communities to organise leagues, track results, and reward top performers.</div></div>
+      <div class="goal-card"><span class="goal-icon">🚀</span><div class="goal-title">Token Launch</div><div class="goal-desc">$BIT token launching soon — stake, earn, vote on tournaments, and own a piece of the Bitarena ecosystem.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEDULE -->
+<section id="schedule">
+  <div class="section-inner reveal">
+    <span class="section-eyebrow">// 003 — Fixtures</span>
+    <h2 class="section-title">Tournament <em>Schedule</em></h2>
+    <div class="divider"></div>
+    <!--
+    ✏️ EDIT: Find TOURNAMENTS array in <script> below.
+    status: "upcoming" | "live" | "ended"
+    Countdown auto-shows when event is within 7 days!
+    -->
+    <div class="schedule-list" id="scheduleList"></div>
+  </div>
+</section>
+
+<!-- WALLET -->
+<section id="wallet">
+  <div class="section-inner reveal">
+    <span class="section-eyebrow">// 004 — Web3</span>
+    <h2 class="section-title">Connect <em>Wallet</em></h2>
+    <div class="divider"></div>
+    <p class="wallet-intro">Connect your Web3 wallet to verify your identity, claim prizes, and participate in on-chain tournaments. Your wallet opens automatically when you tap below.</p>
+    <div class="wallet-grid">
+      <button class="wallet-btn" onclick="connectMetaMask()">
+        <span class="wicon">🦊</span>
+        <span class="wlabel"><big>MetaMask</big><small>Tap to open & sign</small></span>
+      </button>
+      <button class="wallet-btn" onclick="connectBitget()">
+        <span class="wicon">🔷</span>
+        <span class="wlabel"><big>Bitget Wallet</big><small>Tap to open & sign</small></span>
+      </button>
+      <button class="wallet-btn" onclick="connectTrust()">
+        <span class="wicon">🛡️</span>
+        <span class="wlabel"><big>Trust Wallet</big><small>Tap to open & sign</small></span>
+      </button>
+    </div>
+    <div class="wallet-status" id="walletStatus">No wallet connected</div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section id="leaderboard">
+  <div class="section-inner reveal">
+    <span class="section-eyebrow">// 005 — Standings</span>
+    <h2 class="section-title">Team <em>Leaderboard</em></h2>
+    <div class="divider"></div>
+    <!--
+    ✏️ EDIT: Find LEADERBOARD array in <script> below.
+    Fields: team, game, wins, losses, matches, points
+    Rankings sort by points automatically!
+    -->
+    <div class="lb-filters" id="lbFilters"></div>
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Team</th>
+          <th>Points</th>
+          <th>Matches</th>
+          <th>W / L</th>
+        </tr>
+      </thead>
+      <tbody id="lbBody"></tbody>
+    </table>
+    <div class="lb-more">
+      <button class="btn-outline" id="lbToggle" onclick="toggleLb()">Show All ▼</button>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL -->
+<section id="social">
+  <div class="section-inner reveal" style="text-align:center;">
+    <span class="section-eyebrow">// 006 — Community</span>
+    <h2 class="section-title">Join the <em>Community</em></h2>
+    <div class="divider" style="margin:0 auto 3rem;"></div>
+    <!--
+    ✏️ EDIT: Find SOCIAL_LINKS array in <script> below.
+    -->
+    <div class="social-grid" id="socialGrid"></div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 <span>BITARENA</span> · All Rights Reserved · Built on Web3</p>
+  <p style="margin-top:0.5rem;">Support: <a href="mailto:bitarenanetwork@gmail.com">bitarenanetwork@gmail.com</a></p>
+</footer>
+
+<script>
+  /* ============================================================
+     ✏️ TOURNAMENTS — EDIT HERE
+     status: "upcoming" | "live" | "ended"
+     Countdown auto-activates for the nearest event within 7 days!
+  ============================================================ */
+  const TOURNAMENTS = [
+    { name:"Season 1 — Opening Clash", game:"Free Fire",   date:"May 10, 2025 18:00:00", status:"upcoming" },
+    { name:"Web3 Warrior Cup",         game:"PUBG Mobile", date:"May 24, 2025 18:00:00", status:"upcoming" },
+    { name:"Bitarena Qualifier Round", game:"Valorant",    date:"Jun 7, 2025 18:00:00",  status:"upcoming" },
+    { name:"Genesis Beta Tournament",  game:"Free Fire",   date:"Apr 5, 2025 18:00:00",  status:"ended"    },
+  ];
+
+  /* ============================================================
+     ✏️ LEADERBOARD — EDIT HERE
+     Fields: team, game, wins, losses, matches, points
+  ============================================================ */
+  const LEADERBOARD = [
+    { team:"Shadow Squad",   game:"Free Fire",   wins:28, losses:4,  matches:32, points:2840 },
+    { team:"Crypto Kings",   game:"PUBG Mobile", wins:25, losses:6,  matches:31, points:2650 },
+    { team:"Neon Blades",    game:"Valorant",    wins:24, losses:5,  matches:29, points:2590 },
+    { team:"Bit Hunters",    game:"Free Fire",   wins:22, losses:8,  matches:30, points:2410 },
+    { team:"Web3 Warriors",  game:"PUBG Mobile", wins:21, losses:7,  matches:28, points:2380 },
+    { team:"Phantom Force",  game:"Valorant",    wins:20, losses:9,  matches:29, points:2200 },
+    { team:"Arena Gods",     game:"Free Fire",   wins:19, losses:8,  matches:27, points:2150 },
+    { team:"Token Slayers",  game:"PUBG Mobile", wins:18, losses:10, matches:28, points:2020 },
+    { team:"Cyber Wolves",   game:"Valorant",    wins:17, losses:9,  matches:26, points:1980 },
+    { team:"Block Champs",   game:"Free Fire",   wins:16, losses:11, matches:27, points:1870 },
+    { team:"DeFi Snipers",   game:"PUBG Mobile", wins:15, losses:10, matches:25, points:1800 },
+    { team:"Meta Raiders",   game:"Valorant",    wins:15, losses:12, matches:27, points:1750 },
+    { team:"Ghost Protocol", game:"Free Fire",   wins:14, losses:11, matches:25, points:1690 },
+    { team:"NFT Killers",    game:"PUBG Mobile", wins:13, losses:12, matches:25, points:1620 },
+    { team:"Chain Breakers", game:"Valorant",    wins:13, losses:13, matches:26, points:1580 },
+    { team:"Pixel Rush",     game:"Free Fire",   wins:12, losses:12, matches:24, points:1500 },
+    { team:"Stealth Nodes",  game:"PUBG Mobile", wins:12, losses:14, matches:26, points:1450 },
+    { team:"Arcane Bots",    game:"Valorant",    wins:11, losses:13, matches:24, points:1400 },
+    { team:"Zero Gravity",   game:"Free Fire",   wins:11, losses:15, matches:26, points:1350 },
+    { team:"Hex Shooters",   game:"PUBG Mobile", wins:10, losses:14, matches:24, points:1300 },
+    { team:"Vault Breakers", game:"Valorant",    wins:10, losses:15, matches:25, points:1250 },
+    { team:"Rune Blasters",  game:"Free Fire",   wins:9,  losses:14, matches:23, points:1180 },
+    { team:"Iron Wardens",   game:"PUBG Mobile", wins:9,  losses:16, matches:25, points:1120 },
+    { team:"Nova Surge",     game:"Valorant",    wins:8,  losses:15, matches:23, points:1060 },
+    { team:"Dark Pulse",     game:"Free Fire",   wins:8,  losses:17, matches:25, points:1000 },
+    { team:"Byte Storm",     game:"PUBG Mobile", wins:7,  losses:16, matches:23, points: 940 },
+    { team:"Grid Lock",      game:"Valorant",    wins:7,  losses:18, matches:25, points: 880 },
+    { team:"Flux Drive",     game:"Free Fire",   wins:6,  losses:17, matches:23, points: 820 },
+    { team:"Core Breakers",  game:"PUBG Mobile", wins:6,  losses:19, matches:25, points: 760 },
+    { team:"Data Hawks",     game:"Valorant",    wins:5,  losses:18, matches:23, points: 700 },
+  ];
+
+  /* ============================================================
+     ✏️ SOCIAL LINKS — EDIT HERE
+  ============================================================ */
+  const SOCIAL_LINKS = [
+    { icon:"👥", label:"Facebook", href:"https://www.facebook.com/profile.php?id=61566057210758" },
+    { icon:"💬", label:"Discord",  href:"https://discord.gg/QjQuvqfVt6" },
+    { icon:"✈️", label:"Telegram", href:"https://t.me/bitarena_community" },
+    { icon:"🐦", label:"Twitter",  href:"https://twitter.com/yourhandle" },
+    { icon:"▶️", label:"YouTube",  href:"https://youtube.com/@yourchannel" },
+    { icon:"📸", label:"Instagram",href:"https://instagram.com/yourhandle" },
+  ];
+
+  /* ── RENDER SCHEDULE ── */
+  function renderSchedule(){
+    document.getElementById('scheduleList').innerHTML = TOURNAMENTS.map((t,i) => `
+      <div class="sch-item">
+        <div class="sch-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="sch-info">
+          <div class="sch-name">${t.name}</div>
+          <div class="sch-meta">
+            <span>🎮 ${t.game}</span>
+            <span>📅 ${new Date(t.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+          </div>
+        </div>
+        <div class="badge badge-${t.status}">${t.status==='live'?'🔴 LIVE':t.status.toUpperCase()}</div>
+      </div>`).join('');
+  }
+
+  /* ── RENDER SOCIALS ── */
+  function renderSocials(){
+    document.getElementById('socialGrid').innerHTML = SOCIAL_LINKS.map(s=>`
+      <a class="soc-link" href="${s.href}" target="_blank" rel="noopener noreferrer">
+        <span class="soc-icon">${s.icon}</span><span>${s.label}</span>
+      </a>`).join('');
+  }
+
+  /* ── AUTO COUNTDOWN ── */
+  const SEVEN_DAYS = 7*24*60*60*1000;
+  let cdTarget=null, cdTimer=null;
+
+  function initCountdown(){
+    const now=Date.now();
+    const next=TOURNAMENTS
+      .filter(t=>t.status==='upcoming')
+      .map(t=>({...t,ts:new Date(t.date).getTime()}))
+      .filter(t=>t.ts>now)
+      .sort((a,b)=>a.ts-b.ts)
+      .find(t=>t.ts-now<=SEVEN_DAYS);
+
+    if(next){
+      cdTarget=next.ts;
+      document.getElementById('countdownBox').style.display='block';
+      document.getElementById('cdEventName').textContent=`${next.name} · ${next.game}`;
+      if(cdTimer) clearInterval(cdTimer);
+      cdTimer=setInterval(tickCd,1000);
+      tickCd();
+    } else {
+      document.getElementById('countdownBox').style.display='none';
+      if(cdTimer) clearInterval(cdTimer);
+    }
+  }
+
+  function tickCd(){
+    const diff=cdTarget-Date.now();
+    if(diff<=0){
+      ['cd-d','cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).textContent='00');
+      clearInterval(cdTimer);
+      setTimeout(initCountdown,2000);
+      return;
+    }
+    document.getElementById('cd-d').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('cd-h').textContent=String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('cd-m').textContent=String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+    document.getElementById('cd-s').textContent=String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  }
+
+  /* ── LEADERBOARD ── */
+  let lbAll=false, lbFilter='All';
+  const medals=['🥇','🥈','🥉'], rClass=['rg','rs','rb'];
+
+  function renderLbFilters(){
+    const games=['All',...new Set(LEADERBOARD.map(p=>p.game))];
+    document.getElementById('lbFilters').innerHTML=games.map(g=>
+      `<button class="lb-fbtn ${g===lbFilter?'active':''}" onclick="setLbFilter('${g}')">${g}</button>`).join('');
+  }
+  function setLbFilter(g){lbFilter=g;lbAll=false;renderLbFilters();renderLb();}
+  function toggleLb(){
+    lbAll=!lbAll;renderLb();
+    document.getElementById('lbToggle').textContent=lbAll?'Show Less ▲':'Show All ▼';
+  }
+  function renderLb(){
+    const data=LEADERBOARD.slice().sort((a,b)=>b.points-a.points)
+      .filter(p=>lbFilter==='All'||p.game===lbFilter).map((p,i)=>({...p,rank:i+1}));
+    const vis=lbAll?data:data.slice(0,10);
+    document.getElementById('lbBody').innerHTML=vis.map(p=>`
+      <tr class="${p.rank<=3?rClass[p.rank-1]:'ro'}">
+        <td class="lb-rank">${p.rank<=3?medals[p.rank-1]:'#'+p.rank}</td>
+        <td><div class="lb-team">${p.team}</div><div class="lb-gtag">${p.game}</div></td>
+        <td class="lb-pts">${p.points.toLocaleString()}</td>
+        <td class="lb-matches">${p.matches}</td>
+        <td class="lb-wl"><span class="w">${p.wins}W</span> / <span class="l">${p.losses}L</span></td>
+      </tr>`).join('');
+    const total=LEADERBOARD.filter(p=>lbFilter==='All'||p.game===lbFilter).length;
+    document.getElementById('lbToggle').style.display=total<=10?'none':'inline-block';
+  }
+
+  /* ── WALLET ── */
+  const SIGN_MSG="Welcome to Bitarena!\n\nSign this message to verify your wallet.\nNo funds will be transferred.";
+  const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
+
+  async function connectMetaMask(){
+    setWS('Opening MetaMask...','pending');
+    if(isMobile && !window.ethereum){
+      window.location.href=`https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;return;
+    }
+    if(window.ethereum){
+      try{
+        const [addr]=await window.ethereum.request({method:'eth_requestAccounts'});
+        setWS('Sign the message in MetaMask...','pending');
+        await window.ethereum.request({method:'personal_sign',params:[SIGN_MSG,addr]});
+        showW('MetaMask',addr);
+      }catch{setWS('❌ Cancelled or rejected.','error');}
+    } else {
+      setWS('MetaMask not found — opening download...','error');
+      setTimeout(()=>window.open('https://metamask.io/download/','_blank'),1200);
+    }
+  }
+
+  async function connectBitget(){
+    setWS('Opening Bitget Wallet...','pending');
+    const prov=window.bitkeep?.ethereum||window.bitgetEthereum;
+    if(isMobile && !prov){
+      window.location.href=`https://bkcode.vip?action=dapp&url=${encodeURIComponent(window.location.href)}`;return;
+    }
+    if(prov){
+      try{
+        const [addr]=await prov.request({method:'eth_requestAccounts'});
+        setWS('Sign the message in Bitget Wallet...','pending');
+        await prov.request({method:'personal_sign',params:[SIGN_MSG,addr]});
+        showW('Bitget Wallet',addr);
+      }catch{setWS('❌ Cancelled or rejected.','error');}
+    } else {
+      setWS('Bitget Wallet not found — opening download...','error');
+      setTimeout(()=>window.open('https://web3.bitget.com/en/wallet-download','_blank'),1200);
+    }
+  }
+
+  async function connectTrust(){
+    setWS('Opening Trust Wallet...','pending');
+    if(isMobile && !window.ethereum){
+      window.location.href=`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`;return;
+    }
+    if(window.ethereum){
+      try{
+        const [addr]=await window.ethereum.request({method:'eth_requestAccounts'});
+        setWS('Sign the message in Trust Wallet...','pending');
+        await window.ethereum.request({method:'personal_sign',params:[SIGN_MSG,addr]});
+        showW('Trust Wallet',addr);
+      }catch{setWS('❌ Cancelled or rejected.','error');}
+    } else {
+      setWS('Trust Wallet not found — opening download...','error');
+      setTimeout(()=>window.open('https://trustwallet.com/download','_blank'),1200);
+    }
+  }
+
+  function showW(name,addr){setWS(`✅ ${name} connected: ${addr.slice(0,6)}...${addr.slice(-4)}`,'connected');}
+  function setWS(msg,type){const el=document.getElementById('walletStatus');el.textContent=msg;el.className='wallet-status'+(type?' '+type:'');}
+
+  /* ── SCROLL REVEAL ── */
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      // animate progress bars
+      e.target.querySelectorAll('.vs-fill').forEach(bar=>{
+        bar.style.width=bar.dataset.width;
+      });
+    }
+  }),{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  /* ── PARTICLE / PITCH CANVAS ── */
+  const canvas=document.getElementById('bgCanvas'),ctx=canvas.getContext('2d');
+  let W,H,pts=[];
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+
+  function mkPts(){
+    pts=[];
+    // floating particles
+    for(let i=0;i<60;i++) pts.push({
+      x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+      r:Math.random()*1.2+.3,
+      color:Math.random()>.6?'rgba(0,200,83,0.6)':Math.random()>.5?'rgba(178,255,89,0.4)':'rgba(255,214,0,0.3)'
+    });
+  }
+
+  function drawPitchLines(){
+    ctx.strokeStyle='rgba(0,150,50,0.07)';ctx.lineWidth=1;
+    // vertical lines
+    for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    // centre line
+    ctx.strokeStyle='rgba(0,180,60,0.1)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+    // penalty arcs hints
+    ctx.strokeStyle='rgba(0,150,50,0.05)';ctx.lineWidth=1;
+    [[0,H/2],[W,H/2]].forEach(([cx,cy])=>{
+      ctx.beginPath();ctx.arc(cx,cy,120,0,Math.PI*2);ctx.stroke();
+    });
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+    drawPitchLines();
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;
+      if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.color;ctx.fill();
+    });
+    // draw connecting lines between nearby pts
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<100){ctx.beginPath();ctx.strokeStyle=`rgba(0,200,83,${.04*(1-d/100)})`;ctx.lineWidth=.5;ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();}
+    }
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize',()=>{resize();mkPts();});
+  resize();mkPts();animate();
+
+  /* ── INIT ── */
+  renderSchedule();
+  renderSocials();
+  renderLbFilters();
+  renderLb();
+  initCountdown();
+</script>
+</body>
+</html>
